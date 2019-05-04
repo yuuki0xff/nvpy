@@ -1432,7 +1432,13 @@ class View(utils.SubjectMixin):
         # setup generic tags for markdown highlighting
         bold_font = tkFont.Font(self.text_note, self.text_note.cget("font"))
         bold_font.configure(weight="bold")
+        italic_font = tkFont.Font(self.text_note, self.text_note.cget("font"))
+        italic_font.configure(slant="italic")
+        bold_italic_font = tkFont.Font(self.text_note, self.text_note.cget("font"))
+        bold_italic_font.configure(weight="bold", slant="italic")
         self.text_note.tag_config('md-bold', font=bold_font)
+        self.text_note.tag_config('md-italic', font=italic_font)
+        self.text_note.tag_config('md-bold-italic', font=bold_italic_font)
         self.fonts.append(bold_font)
 
         # finish UI creation ###########################################
@@ -1789,6 +1795,8 @@ class View(utils.SubjectMixin):
         # we have multiple tags with the same name, e.g. md-bold
         # this will remove all of them.
         t.tag_remove('md-bold', '1.0', 'end')
+        t.tag_remove('md-italic', '1.0', 'end')
+        t.tag_remove('md-bold-italic', '1.0', 'end')
 
         # first just use our standard regular expression for finding the first
         # non whitespace line, wherever it is:
@@ -1799,11 +1807,27 @@ class View(utils.SubjectMixin):
                       '1.0+{0}c'.format(mo.end()))
 
         # then do headings
-        pat = re.compile(r"^#.*$", re.MULTILINE)
-
-        for mo in pat.finditer(content):
+        for mo in utils.note_headers_re.finditer(content):
             # mo.start(), mo.end() or mo.span() in one go
             t.tag_add('md-bold',
+                      '1.0+{0}c'.format(mo.start()),
+                      '1.0+{0}c'.format(mo.end()))
+
+        # italic
+        for mo in utils.note_italic_re.finditer(content):
+            t.tag_add('md-italic',
+                      '1.0+{0}c'.format(mo.start()),
+                      '1.0+{0}c'.format(mo.end()))
+
+        # bold
+        for mo in utils.note_bold_re.finditer(content):
+            t.tag_add('md-bold',
+                      '1.0+{0}c'.format(mo.start()),
+                      '1.0+{0}c'.format(mo.end()))
+
+        # bold and italic
+        for mo in utils.note_bold_italic_re.finditer(content):
+            t.tag_add('md-bold-italic',
                       '1.0+{0}c'.format(mo.start()),
                       '1.0+{0}c'.format(mo.end()))
 

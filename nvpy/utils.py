@@ -12,6 +12,48 @@ from Queue import Queue, Empty as QueueEmpty
 
 # first line with non-whitespace should be the title
 note_title_re = re.compile('\s*(.*)\n?')
+note_headers_re = re.compile(
+    # matches:
+    #   # title
+    #
+    #   title
+    #   =====
+    r'^(#.*|.*\n(==+|--+))$',
+    re.MULTILINE
+)
+note_italic_re = re.compile(
+    # matches:
+    #   *italic text*
+    # not matches:
+    #   **bold**
+    #   ***bold and italic***
+    #   * contains some spaces between asterisk and words *
+    r'(?<!\*\*)(?<=\*)(?=\S)(?:(?!\*).)+(?<=\S)(?=\*)(?!\*\*)'  # one asterisk
+    r'|'
+    r'(?<!__)(?<=_)(?=\S)(?:(?!_).)+(?<=\S)(?=_)(?!__)'  # one underscore
+)
+note_bold_re = re.compile(
+    # matches:
+    #   **bold text**
+    # not matches:
+    #   *italic*
+    #   ***bold and italic***
+    #   ** contains some spaces between asterisk and words **
+    r'(?<!\*{3})(?<=\*\*)(?=\S)(?:(?!\*\*).)+(?<=\S)(?=\*\*)(?!\*{3})'  # two asterisks
+    r'|'
+    r'(?<!_{3})(?<=__)(?=\S)(?:(?!__).)+(?<=\S)(?=__)(?!_{3})'  # two underscores
+)
+note_bold_italic_re = re.compile(
+    # matches:
+    #   ***bold and italic***
+    # not matches:
+    #   *italic*
+    #   **bold text**
+    #   *** contains some spaces between asterisk and words ***
+    r'(?<=\*{3})(?=\S)(?:(?!\*{3}).)+(?<=\S)(?=\*{3})'  # three asterisks
+    r'|'
+    r'(?<=_{3})(?=\S)(?:(?!_{3}).)+(?<=\S)(?=_{3})'  # three underscores
+)
 
 
 def generate_random_key():
@@ -106,6 +148,7 @@ def note_markdown(n):
     else:
         return 0
 
+
 tags_illegal_chars = re.compile(r'[\s]')
 
 
@@ -157,6 +200,7 @@ def sort_by_create_date_pinned(a, b):
         return -1
     else:
         return cmp(float(a.note.get('createdate', 0)), float(b.note.get('createdate', 0)))
+
 
 def check_internet_on():
     """Utility method to check if we have an internet connection.
